@@ -24,9 +24,7 @@ import com.qualcomm.vuforia.samples.VuforiaSamples.R;
 public class ActivityLauncher extends ListActivity
 {
     
-    private String mActivities[] = { "Image Targets", "Cylinder Targets",
-            "Multi Targets", "User Defined Targets", "Object Reco", "Cloud Reco", "Text Reco",
-            "Frame Markers", "Virtual Buttons"};
+    private String mActivities[] = { "MIS Assignment 05"};
     
     
     @Override
@@ -42,6 +40,14 @@ public class ActivityLauncher extends ListActivity
         
         setContentView(R.layout.activities_list);
         setListAdapter(adapter);
+
+        Intent intent = new Intent(this, AboutScreen.class);
+        intent.putExtra("ABOUT_TEXT_TITLE", mActivities[0]);
+        intent.putExtra("ACTIVITY_TO_LAUNCH",
+                "app.ImageTargets.ImageTargets");
+        intent.putExtra("ABOUT_TEXT", "ImageTargets/IT_about.html");
+        startActivity(intent);
+
     }
     
     

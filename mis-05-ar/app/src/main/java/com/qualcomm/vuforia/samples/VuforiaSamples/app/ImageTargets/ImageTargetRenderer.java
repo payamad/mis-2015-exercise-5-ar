@@ -29,6 +29,7 @@ import com.qualcomm.vuforia.Vuforia;
 import com.qualcomm.vuforia.samples.SampleApplication.SampleApplicationSession;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.CubeShaders;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.LoadingDialogHandler;
+import com.qualcomm.vuforia.samples.SampleApplication.utils.Plane;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.SampleApplication3DModel;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.SampleUtils;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.Teapot;
@@ -58,6 +59,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private int texSampler2DHandle;
     
     private Teapot mTeapot;
+    private Plane mPlane;
     
     private float kBuildingScale = 12.0f;
     private SampleApplication3DModel mBuildingsModel;
@@ -65,6 +67,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private Renderer mRenderer;
     
     boolean mIsActive = false;
+    private boolean mUniversityTargets = false;
     
     private static final float OBJECT_SCALE_FLOAT = 3.0f;
     
@@ -118,6 +121,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private void initRendering()
     {
         mTeapot = new Teapot();
+        mPlane = new Plane();
         
         mRenderer = Renderer.getInstance();
         
@@ -197,42 +201,80 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             Matrix44F modelViewMatrix_Vuforia = Tool
                 .convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
-            
-            int textureIndex = trackable.getName().equalsIgnoreCase("cat") ? 0
-                : 1;
-            textureIndex = trackable.getName().equalsIgnoreCase("city") ? 2
-                : textureIndex;
-            
+
+            mUniversityTargets = false;
+            int textureIndex = trackable.getName().equalsIgnoreCase("tree") ? 0 : 1;
+            textureIndex = trackable.getName().equalsIgnoreCase("cat") ? 2 : textureIndex;
+
+            if(trackable.getName().equalsIgnoreCase("echtler")) {
+                textureIndex = 3;
+                mUniversityTargets = true;
+            }
+            else if((trackable.getName().equalsIgnoreCase("rodehorst")))
+            {
+                textureIndex = 4;
+                mUniversityTargets = true;
+            }
+            else if((trackable.getName().equalsIgnoreCase("hornecker")))
+            {
+                textureIndex = 5;
+                mUniversityTargets = true;
+            }
+            else if((trackable.getName().equalsIgnoreCase("wuthrich")))
+            {
+                textureIndex = 6;
+                mUniversityTargets = true;
+            }
+
             // deal with the modelview and projection matrices
             float[] modelViewProjection = new float[16];
             
             if (!mActivity.isExtendedTrackingActive())
             {
-                Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f,
-                    OBJECT_SCALE_FLOAT);
-                Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT,
-                    OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
+                if(!mUniversityTargets) {
+                    Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f,
+                            OBJECT_SCALE_FLOAT);
+                    Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT,
+                            OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
+                } else {
+                    Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f,
+                            OBJECT_SCALE_FLOAT);
+                    Matrix.scaleM(modelViewMatrix, 0, 120.0f, 160.0f, 10.0f);
+                    Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT,
+                            OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
+                }
             } else
             {
                 Matrix.rotateM(modelViewMatrix, 0, 90.0f, 1.0f, 0, 0);
                 Matrix.scaleM(modelViewMatrix, 0, kBuildingScale,
-                    kBuildingScale, kBuildingScale);
+                        kBuildingScale, kBuildingScale);
             }
             
             Matrix.multiplyMM(modelViewProjection, 0, vuforiaAppSession
-                .getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
+                    .getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
             
             // activate the shader program and bind the vertex/normal/tex coords
             GLES20.glUseProgram(shaderProgramID);
             
             if (!mActivity.isExtendedTrackingActive())
             {
-                GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mTeapot.getVertices());
-                GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mTeapot.getNormals());
-                GLES20.glVertexAttribPointer(textureCoordHandle, 2,
-                    GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
+               if(!mUniversityTargets)
+               {
+                   GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
+                           false, 0, mTeapot.getVertices());
+                   GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
+                           false, 0, mTeapot.getNormals());
+                   GLES20.glVertexAttribPointer(textureCoordHandle, 2,
+                           GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
+               } else {
+                   GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
+                           false, 0, mPlane.getVertices());
+                   GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
+                           false, 0, mPlane.getNormals());
+                   GLES20.glVertexAttribPointer(textureCoordHandle, 2,
+                           GLES20.GL_FLOAT, false, 0, mPlane.getTexCoords());
+               }
+
                 
                 GLES20.glEnableVertexAttribArray(vertexHandle);
                 GLES20.glEnableVertexAttribArray(normalHandle);
@@ -248,10 +290,18 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false,
                     modelViewProjection, 0);
                 
-                // finally draw the teapot
-                GLES20.glDrawElements(GLES20.GL_TRIANGLES,
-                    mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
-                    mTeapot.getIndices());
+                if(!mUniversityTargets)
+                {
+                    // finally draw the teapot
+                    GLES20.glDrawElements(GLES20.GL_TRIANGLES,
+                            mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
+                            mTeapot.getIndices());
+                } else {
+                    // finally draw the teapot
+                    GLES20.glDrawElements(GLES20.GL_TRIANGLES,
+                            mPlane.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
+                            mPlane.getIndices());
+                }
                 
                 // disable the enabled arrays
                 GLES20.glDisableVertexAttribArray(vertexHandle);

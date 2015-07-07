@@ -7,6 +7,11 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.qualcomm.vuforia.samples.VuforiaSamples.app.ImageTargets;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Target;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -15,11 +20,15 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -27,6 +36,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
@@ -94,6 +105,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private AlertDialog mErrorDialog;
     
     boolean mIsDroidDevice = false;
+
+    String[][] mUniversityTargetArray = {{"echtler.jpg","https://www.uni-weimar.de/de/medien/professuren/mobile-media/people/"}
+    ,{"rodehorst.jpg","https://www.uni-weimar.de/en/media/chairs/computer-vision/people/"}
+    ,{"hornecker.jpg","https://www.uni-weimar.de/en/media/chairs/prof-dr-eva-hornecker/people/"}
+    ,{"wuthrich.jpg","https://www.uni-weimar.de/en/media/chairs/computer-graphics/"}};
     
     
     // Called when the activity first starts or the user navigates back to an
@@ -162,7 +178,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     // We want to load specific textures from the APK, which we will later use
     // for rendering.
-    
+
+    private static WebView[] webView = new WebView[4];
     private void loadTextures()
     {
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotGreen.png",
@@ -170,9 +187,77 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png",
             getAssets()));
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotRed.png",
-            getAssets()));
+                getAssets()));
+
+        for(int i=0 ; i<4 ; i++)
+        {
+            loadUniversityTargets(i, mUniversityTargetArray[i][0], mUniversityTargetArray[i][1]);
+
+        }
+
     }
-    
+
+    private void loadUniversityTargets(final int index, final String filename, String url)
+    {
+        /**
+         * save a Web Page as image
+         * ref : http://stackoverflow.com/questions/20942623/which-can-replace-capturepicture-function/20963109#20963109
+         */
+
+        webView[index] = (WebView) new WebView(this);
+        webView[index].loadUrl(url);
+
+        webView[index].setWebViewClient(new WebViewClient() {
+
+            public void onPageFinished(WebView view, String url) {
+                // do your stuff here
+                webView[index].measure(View.MeasureSpec.makeMeasureSpec(
+                                View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                webView[index].layout(0, 0, webView[index].getMeasuredWidth(),
+                        webView[index].getMeasuredHeight());
+                webView[index].setDrawingCacheEnabled(true);
+                webView[index].buildDrawingCache();
+                Bitmap bm = Bitmap.createBitmap(600,
+                        800, Bitmap.Config.ARGB_8888);
+
+                Canvas bigcanvas = new Canvas(bm);
+                Paint paint = new Paint();
+                int iHeight = bm.getHeight();
+                bigcanvas.drawBitmap(bm, 0, iHeight, paint);
+                webView[index].draw(bigcanvas);
+                System.out.println("1111111111111111111111="
+                        + bigcanvas.getWidth());
+                System.out.println("22222222222222222222222="
+                        + bigcanvas.getHeight());
+
+                if (bm != null) {
+                    try {
+                        String path = Environment.getExternalStorageDirectory()
+                                .toString();
+                        OutputStream fOut = null;
+                        File file = new File(path, "/" + filename);
+                        fOut = new FileOutputStream(file);
+
+                        bm.compress(Bitmap.CompressFormat.PNG, 50, fOut);
+                        fOut.flush();
+                        fOut.close();
+                        bm.recycle();
+                        Thread.sleep(1000);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        mTextures.add(Texture.loadTextureFromApk(filename,
+                getAssets()));
+
+
+
+    }
     
     // Called when the activity will start interacting with the user.
     @Override

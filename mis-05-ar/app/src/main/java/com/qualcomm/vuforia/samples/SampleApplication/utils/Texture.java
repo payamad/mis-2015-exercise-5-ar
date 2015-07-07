@@ -8,6 +8,8 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 package com.qualcomm.vuforia.samples.SampleApplication.utils;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -16,6 +18,7 @@ import java.nio.ByteOrder;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.util.Log;
 
 
@@ -38,9 +41,17 @@ public class Texture
         AssetManager assets)
     {
         InputStream inputStream = null;
+
         try
         {
-            inputStream = assets.open(fileName, AssetManager.ACCESS_BUFFER);
+            if(fileName.contains("Texture"))
+                inputStream = assets.open(fileName, AssetManager.ACCESS_BUFFER);
+            else
+            {
+                String dir = Environment.getExternalStorageDirectory().toString();
+                File f_path = new File(dir + "/" + fileName);
+                inputStream = new BufferedInputStream(new FileInputStream(f_path));
+            }
             
             BufferedInputStream bufferedStream = new BufferedInputStream(
                 inputStream);
